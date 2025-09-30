@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solcon | About Us</title>
+  <link rel="icon" href="Logo.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-container">
+      <a class="logo" href="index.html" aria-label="Home">
+        <img src="Logo.png" alt="Solcon Logo" />
+      </a>
+
+      <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-nav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav id="main-nav" class="main-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li class="nav-item dropdown">
+            <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">About Us</button>
+            <ul class="dropdown-menu">
+              <li><a href="#history">History</a></li>
+              <li><a href="#timeline">Timeline</a></li>
+              <li><a href="#office">Office</a></li>
+              <li><a href="#key-members">Key Members</a></li>
+            </ul>
+          </li>
+          <li class="nav-item"><a href="index.html#services">Services</a></li>
+          <li class="nav-item"><a href="index.html#projects">Projects</a></li>
+          <li class="nav-item"><a href="more.html#sustainability">Sustainability & CSR</a></li>
+          <li class="nav-item"><a href="more.html#newsroom">Newsroom</a></li>
+          <li class="nav-item highlight"><a href="more.html#careers">Careers</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section id="history" class="section parallax parallax-primary" aria-label="History">
+      <div class="container">
+        <h2 class="section-title">History</h2>
+        <p>Since 1989, Solcon has delivered end-to-end consulting, design, and engineering solutions across industrial, institutional, residential, and specialized projects.</p>
+      </div>
+    </section>
+
+    <section id="timeline" class="section parallax parallax-alt" aria-label="Timeline">
+      <div class="container">
+        <h2 class="section-title">Timeline</h2>
+        <figure class="photo-frame fullscreen">
+          <img src="History/history.png" alt="Solcon history timeline" loading="lazy" />
+        </figure>
+      </div>
+    </section>
+
+    <section id="office" class="section parallax parallax-primary" aria-label="Office">
+      <div class="container">
+        <h2 class="section-title">Office</h2>
+        <div class="grid grid-2">
+          <div class="card">
+            <h3>Vadodara HQ</h3>
+            <p>Our headquarters enabling integrated delivery across disciplines with collaborative teams.</p>
+            <iframe title="Vadodara Map" loading="lazy"
+              src="https://www.google.com/maps?q=Vadodara&output=embed"></iframe>
+          </div>
+          <div class="card">
+            <h3>Dubai</h3>
+            <p>Strategic presence serving the Middle East region.</p>
+            <iframe title="Dubai Map" loading="lazy"
+              src="https://www.google.com/maps?q=Dubai&output=embed"></iframe>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="key-members" class="section parallax parallax-alt" aria-label="Key Members">
+      <div class="container">
+        <h2 class="section-title">Key Members</h2>
+        <div id="key-members-grid" class="members-grid grid grid-3">
+          <figure class="member-card">
+            <div class="portrait-frame"><img src="Key Members/1. Vandana Shah.JPG" alt="Vandana Shah" loading="lazy"></div>
+            <figcaption>Vandana Shah</figcaption>
+          </figure>
+          <figure class="member-card">
+            <div class="portrait-frame"><img src="Key Members/2. Dr. Bimal Shah.JPG" alt="Dr. Bimal Shah" loading="lazy"></div>
+            <figcaption>Dr. Bimal Shah</figcaption>
+          </figure>
+          <figure class="member-card">
+            <div class="portrait-frame"><img src="Key Members/3. Karan Shah.JPG" alt="Karan Shah" loading="lazy"></div>
+            <figcaption>Karan Shah</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- Removed Partnerships, Associate Partners, Joint Ventures, and EPC sections as requested -->
+
+
+    <!-- Moved Sustainability & CSR, Newsroom (with modal), and Careers to more.html as requested -->
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Solcon. All rights reserved.</p>
+      <a href="#top" class="back-to-top">Back to top ↑</a>
+    </div>
+  </footer>
+
+  <script src="js/app.js" defer></script>
+</body>
+</html>

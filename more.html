@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solcon | Sustainability, Newsroom & Careers</title>
+  <link rel="icon" href="Logo.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+  <style>
+    /* Desktop dropdown */
+    .nav-list .dropdown-menu {
+      display: none;
+      flex-direction: column;
+      position: absolute;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      margin-top: 5px;
+      padding: 10px 0;
+      min-width: 180px;
+      z-index: 1000;
+    }
+
+    .nav-list .dropdown.open .dropdown-menu {
+      display: flex;
+    }
+
+    /* Desktop dropdown items */
+    .nav-list .dropdown-menu li a {
+      padding: 8px 15px;
+      display: block;
+      color: #333;
+      text-decoration: none;
+    }
+
+    .nav-list .dropdown-menu li a:hover {
+      background-color: #f0f0f0;
+    }
+
+    /* Hamburger menu - mobile */
+    @media (max-width: 991px) {
+      .main-nav {
+        display: none;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .main-nav.active {
+        display: flex;
+      }
+
+      .nav-list {
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      /* Mobile dropdown - push items down */
+      .nav-item.dropdown > .dropdown-toggle {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+        cursor: pointer;
+      }
+
+      .nav-item.dropdown .dropdown-menu {
+        position: static;
+        border: none;
+        padding-left: 15px;
+      }
+
+      .nav-item.dropdown.open .dropdown-menu {
+        display: flex;
+        flex-direction: column;
+      }
+    }
+
+    .back-to-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.back-to-top:hover {
+    background-color: #555;
+    transform: translateY(-2px);
+}
+
+.back-to-top i {
+    font-size: 18px;
+}
+  </style>
+</head>
+<body id="top">
+  <!-- Header -->
+  <header class="site-header">
+    <div class="container nav-container">
+      <a class="logo" href="index.html" aria-label="Home">
+        <img src="Logo.png" alt="Solcon Logo" />
+      </a>
+
+      <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-nav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav id="main-nav" class="main-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li class="nav-item dropdown">
+            <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">About Us</button>
+            <ul class="dropdown-menu">
+              <li><a href="about.html#history">History</a></li>
+              <li><a href="about.html#timeline">Timeline</a></li>
+              <li><a href="about.html#office">Office</a></li>
+              <li><a href="about.html#key-members">Key Members</a></li>
+            </ul>
+          </li>
+          <li class="nav-item"><a href="index.html#services">Services</a></li>
+          <li class="nav-item"><a href="index.html#projects">Projects</a></li>
+          <li class="nav-item"><a href="#sustainability">Sustainability & CSR</a></li>
+          <li class="nav-item"><a href="#newsroom">Newsroom</a></li>
+          <li class="nav-item highlight"><a href="#careers">Careers</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main>
+    <!-- Sustainability & CSR -->
+    <section id="sustainability" class="section parallax parallax-alt" aria-label="Sustainability & CSR">
+      <div class="container">
+        <h2 class="section-title">Sustainability & CSR</h2>
+        <div id="sustainability-grid" class="grid">
+          <div class="project-card"><img src="Sustainability and CSR/1.jpg" alt="Sustainability image 1" loading="lazy"></div>
+          <div class="project-card"><img src="Sustainability and CSR/2.jpg" alt="Sustainability image 2" loading="lazy"></div>
+          <div class="project-card"><img src="Sustainability and CSR/3.jpg" alt="Sustainability image 3" loading="lazy"></div>
+          <div class="project-card"><img src="Sustainability and CSR/4.jpg" alt="Sustainability image 4" loading="lazy"></div>
+          <div class="project-card"><img src="Sustainability and CSR/5.jpg" alt="Sustainability image 5" loading="lazy"></div>
+          <div class="project-card"><img src="Sustainability and CSR/6.jpg" alt="Sustainability image 6" loading="lazy"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Newsroom -->
+    <section id="newsroom" class="section parallax parallax-primary" aria-label="Newsroom">
+      <div class="container">
+        <h2 class="section-title">Newsroom</h2>
+        <div id="newsroom-grid" class="grid grid-5"></div>
+        <div class="text-center" style="margin-top: 32px;">
+          <button id="newsroom-show-more" hidden>Show More</button>
+        </div>
+      </div>
+
+      <!-- Newsroom Modal -->
+      <div id="newsroom-modal" class="modal" aria-hidden="true" aria-labelledby="newsroom-modal-title" role="dialog">
+        <div class="modal-backdrop" data-close="modal"></div>
+        <div class="modal-content">
+          <button class="modal-close" aria-label="Close" data-close="modal">&times;</button>
+          <h3 id="newsroom-modal-title"></h3>
+          <div class="modal-nav">
+            <button class="slide-nav prev">&lt;</button>
+            <div class="slides-container"></div>
+            <button class="slide-nav next">&gt;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Careers -->
+<section id="careers" class="section parallax parallax-alt" aria-label="Careers">
+  <div class="container careers-container">
+    
+    <!-- Title -->
+    <h2 class="section-title">Careers – Reach out to us</h2>
+
+    <div class="careers-content">
+      <!-- Left Side Content -->
+      <div class="careers-left">
+        <p>
+          We at Solcon believe that "do what you love and love what you do." 
+          At Solcon, we nurture you by exposing you to multidimensional concepts 
+          of civil engineering thus bringing out the best in you. 
+        </p>
+        <p>
+          We believe that the crux of a successful project and an excellent 
+          firm behind it lies in the team effort.<br>
+          <strong>Ready to be a part of the Team? We are hiring.</strong>
+        </p>
+      </div>
+
+      <!-- Right Side Form -->
+      <div class="careers-right">
+        <form id="careers-form" class="contact-form" novalidate>
+          
+          <!-- Row 1 -->
+          <div class="form-row">
+            <label>
+              Name <span>*</span>
+              <input type="text" name="name" required />
+            </label>
+            <label>
+              Email <span>*</span>
+              <input type="email" name="email" required />
+            </label>
+          </div>
+
+          <!-- Row 2 -->
+          <div class="form-row">
+            <label>
+              Qualification <span>*</span>
+              <select name="qualification" required>
+                <option value="">- Select -</option>
+                <option value="btech">B.Tech</option>
+                <option value="mtech">M.Tech</option>
+                <option value="other">Other</option>
+              </select>
+            </label>
+            <label>
+              Experience <span>*</span>
+              <select name="experience" required>
+                <option value="">- Select -</option>
+                <option value="fresher">Fresher</option>
+                <option value="1-3">1-3 Years</option>
+                <option value="3-5">3-5 Years</option>
+                <option value="5+">5+ Years</option>
+              </select>
+            </label>
+          </div>
+
+          <!-- Row 3 -->
+          <div class="form-row single">
+            <label>
+              Attach Resume <span>*</span>
+              <input type="file" name="resume" required />
+            </label>
+          </div>
+
+          <!-- Row 4 -->
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Submit</button>
+            <button type="reset" class="btn-secondary">Reset</button>
+          </div>
+
+          <p id="careers-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+    </div>
+    
+  </div>
+</section>
+
+
+  <!--Social Media Icons-->
+  <!-- Social Drawer -->
+    <aside class="social-drawer" aria-label="Social Media Drawer">
+      <button class="social-drawer-toggle" aria-expanded="false" aria-controls="social-drawer-panel"></button>
+      <div id="social-drawer-panel" class="social-drawer-panel">
+        <nav class="social-icons" role="navigation" aria-label="Social Media Links">
+          <a href="#" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener">
+            <img src="icons/facebook.svg" alt="Facebook" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener">
+            <img src="icons/instagram.svg" alt="Instagram" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Slideshare" target="_blank" rel="noopener">
+            <img src="icons/slideshare.svg" alt="Slideshare" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="YouTube" target="_blank" rel="noopener">
+            <img src="icons/youtube.svg" alt="YouTube" width="36" height="36" />
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+
+  </main>
+
+  <!-- Footer -->
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Solcon. All rights reserved.</p>
+      <a href="#top" class="back-to-top" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+      </a>
+    </div>
+</footer>
+
+  <!-- Scripts -->
+  <script src="js/app.js" defer></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const hamburger = document.querySelector(".hamburger");
+      const mainNav = document.getElementById("main-nav");
+      const dropdownToggles = document.querySelectorAll(".dropdown-toggle");
+
+      // Hamburger toggle
+      hamburger.addEventListener("click", () => {
+        mainNav.classList.toggle("active");
+        const expanded = hamburger.getAttribute("aria-expanded") === "true";
+        hamburger.setAttribute("aria-expanded", !expanded);
+      });
+
+      // Dropdown toggle
+      dropdownToggles.forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const parent = btn.parentElement;
+
+          // Close other dropdowns
+          document.querySelectorAll(".nav-item.dropdown").forEach((item) => {
+            if (item !== parent) item.classList.remove("open");
+          });
+
+          // Toggle current dropdown
+          parent.classList.toggle("open");
+
+          // Update aria-expanded
+          const expanded = btn.getAttribute("aria-expanded") === "true";
+          btn.setAttribute("aria-expanded", !expanded);
+        });
+      });
+    });
+  </script>
+</body>
+</html>

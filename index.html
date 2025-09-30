@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solcon | Home</title>
+  <link rel="icon" href="Logo.png" />
+  <link rel="preload" as="video" href="construction-video.mp4" />
+  <link rel="stylesheet" href="css/styles.css" />
+  <!-- Add this in your <head> -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+
+<style>
+/* Desktop dropdown */
+.nav-list .dropdown-menu {
+  display: none; /* hidden initially */
+  flex-direction: column;
+  position: absolute; /* overlay for desktop */
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-top: 5px;
+  padding: 10px 0;
+  min-width: 180px;
+  z-index: 1000;
+}
+
+.nav-list .dropdown.open .dropdown-menu {
+  display: flex;
+}
+
+/* Desktop dropdown items */
+.nav-list .dropdown-menu li a {
+  padding: 8px 15px;
+  display: block;
+  color: #333;
+  text-decoration: none;
+}
+
+.nav-list .dropdown-menu li a:hover {
+  background-color: #f0f0f0;
+}
+
+/* Hamburger menu - mobile */
+@media (max-width: 991px) {
+  .main-nav {
+    display: none;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .main-nav.active {
+    display: flex;
+  }
+
+  .nav-list {
+    flex-direction: column;
+    gap: 5px;
+  }
+
+  /* Mobile dropdown - push items down */
+  .nav-item.dropdown > .dropdown-toggle {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    cursor: pointer;
+  }
+
+  .nav-item.dropdown .dropdown-menu {
+    position: static; /* stack normally */
+    border: none;
+    padding-left: 15px; /* indent submenu */
+  }
+
+  .nav-item.dropdown.open .dropdown-menu {
+    display: flex;
+    flex-direction: column;
+  }
+}
+
+.back-to-top {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    background-color: #333;
+    color: #fff;
+    border-radius: 50%;
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.back-to-top:hover {
+    background-color: #555;
+    transform: translateY(-2px);
+}
+
+.back-to-top i {
+    font-size: 18px;
+}
+
+
+</style>
+</head>
+<body id="top">
+  <header class="site-header">
+    <div class="container nav-container">
+      <a class="logo" href="index.html" aria-label="Home">
+        <img src="Logo.png" alt="Solcon Logo" />
+      </a>
+
+      <button class="hamburger" aria-label="Toggle navigation" aria-expanded="false" aria-controls="main-nav">
+        <span></span><span></span><span></span>
+      </button>
+
+      <nav id="main-nav" class="main-nav" aria-label="Primary">
+        <ul class="nav-list">
+          <li class="nav-item dropdown">
+            <button class="dropdown-toggle" aria-haspopup="true" aria-expanded="false">About Us</button>
+            <ul class="dropdown-menu">
+              <li><a href="about.html#history">History</a></li>
+              <li><a href="about.html#timeline">Timeline</a></li>
+              <li><a href="about.html#office">Office</a></li>
+              <li><a href="about.html#key-members">Key Members</a></li>
+            </ul>
+          </li>
+          <li class="nav-item"><a href="#services">Services</a></li>
+          <li class="nav-item"><a href="#projects">Projects</a></li>
+          <li class="nav-item"><a href="more.html#sustainability">Sustainability & CSR</a></li>
+          <li class="nav-item"><a href="more.html#newsroom">Newsroom</a></li>
+          <li class="nav-item highlight"><a href="more.html#careers">Careers</a></li>
+        </ul>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- Hero -->
+    <section class="hero" aria-label="Hero">
+      <video class="hero-video" src="construction-video.mp4" autoplay muted loop playsinline preload="metadata"></video>
+      <div class="hero-overlay"></div>
+    </section>
+
+    <!-- Achievements -->
+    <section class="section achievements" aria-label="Key Figures">
+      <div class="container">
+        <h2 class="section-title">Key Figures</h2>
+        <div class="stats-grid">
+          <div class="stat">
+            <div class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12z"></path><path d="M12 10v4"></path><path d="M12 16h.01"></path></svg>
+            </div>
+            <div class="stat-number" data-target="1989">0</div>
+            <div class="stat-label">Founded</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3h6v6H3z"></path><path d="M9 3l6 6"></path><path d="M15 9l6 6"></path><path d="M9 15l6 6"></path></svg>
+            </div>
+            <div class="stat-number" data-target="100" data-suffix="+">0</div>
+            <div class="stat-label">Projects Delivered</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"></path><path d="M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg>
+            </div>
+            <div class="stat-number" data-target="100" data-suffix="+">0</div>
+            <div class="stat-label">Happy Clients</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7z"></path></svg>
+            </div>
+            <div class="stat-number" data-target="25" data-suffix="+">0</div>
+            <div class="stat-label">Awards</div>
+          </div>
+          <div class="stat">
+            <div class="stat-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"></path><path d="M12 2v20"></path><circle cx="12" cy="12" r="9"></circle></svg>
+            </div>
+            <div class="stat-number" data-target="10" data-suffix="+">0</div>
+            <div class="stat-label">Countries</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Projects -->
+    <section id="projects" class="section projects parallax parallax-primary" aria-label="Projects">
+      <div class="container">
+        <div class="section-header">
+          <h2 class="section-title">Projects</h2>
+          <div class="filters" role="tablist" aria-label="Project Categories">
+            <button class="filter-btn active" data-filter="All" role="tab" aria-selected="true">All Projects</button>
+            <button class="filter-btn" data-filter="Industrial" role="tab" aria-selected="false">Industrial</button>
+            <button class="filter-btn" data-filter="Institutional and Public Buildings" role="tab" aria-selected="false">Institutional & Public</button>
+            <button class="filter-btn" data-filter="Recreational and Hospitality" role="tab" aria-selected="false">Recreational & Hospitality</button>
+            <button class="filter-btn" data-filter="Residential" role="tab" aria-selected="false">Residential</button>
+            <button class="filter-btn" data-filter="Unique Projects" role="tab" aria-selected="false">Unique</button>
+          </div>
+        </div>
+
+        <div id="projects-grid" class="grid grid-5"></div>
+
+        <div class="center">
+          <button id="projects-show-more" class="btn-secondary" hidden>Show More</button>
+        </div>
+      </div>
+
+      <!-- Project Modal -->
+      <div id="project-modal" class="modal" aria-hidden="true" aria-labelledby="project-modal-title" role="dialog">
+        <div class="modal-backdrop" data-close="modal"></div>
+        <div class="modal-content">
+          <button class="modal-close" aria-label="Close" data-close="modal">&times;</button>
+          <h3 id="project-modal-title"></h3>
+          <div class="slideshow">
+            <button class="slide-nav prev" aria-label="Previous image">&#10094;</button>
+            <div class="slides-container"></div>
+            <button class="slide-nav next" aria-label="Next image">&#10095;</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Services -->
+    <section id="services" class="section services parallax parallax-architecture" aria-label="Services">
+      <div class="container">
+        <h2 class="section-title">Services</h2>
+        <div id="services-grid" class="grid grid-5"></div>
+      </div>
+
+      <!-- Service Modal -->
+      <div id="service-modal" class="modal" aria-hidden="true" aria-labelledby="service-modal-title" role="dialog">
+        <div class="modal-backdrop" data-close="modal"></div>
+        <div class="modal-content">
+          <button class="modal-close" aria-label="Close" data-close="modal">&times;</button>
+          <h3 id="service-modal-title"></h3>
+          <div class="slideshow">
+            <button class="slide-nav prev" aria-label="Previous service">&#10094;</button>
+            <img id="service-modal-banner" alt="" loading="lazy" />
+            <button class="slide-nav next" aria-label="Next service">&#10095;</button>
+          </div>
+          <div id="service-modal-desc"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Clients -->
+    <section class="section clients parallax parallax-engineering" aria-label="Clients">
+      <div class="container">
+        <h2 class="section-title">Clients</h2>
+        <div class="filters" role="tablist" aria-label="Client Categories">
+          <button class="client-filter-btn active" data-filter="Public Companies" role="tab" aria-selected="true">Public Companies</button>
+          <button class="client-filter-btn" data-filter="Multinational Companies" role="tab" aria-selected="false">Multinational Companies</button>
+          <button class="client-filter-btn" data-filter="Private Limited Companies" role="tab" aria-selected="false">Private Limited Companies</button>
+          <button class="client-filter-btn" data-filter="Government Organizations" role="tab" aria-selected="false">Government Organizations</button>
+          <button class="client-filter-btn" data-filter="Associate Property International Consultants" role="tab" aria-selected="false">Associate Property International Consultants</button>
+        </div>
+        <div id="clients-grid" class="grid grid-5"></div>
+        <div class="center">
+          <!-- <button id="clients-show-more" class="btn-secondary" hidden>Show More</button> -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Global Reach -->
+    <section class="section global-reach parallax parallax-alt" aria-label="Global Reach">
+      <div class="container">
+        <h2 class="section-title">Global Reach</h2>
+        <div class="photo-frame fullscreen">
+          <img src="Global Reach/1.png" alt="Global Reach map" class="global-reach-img" loading="lazy" />
+        </div>
+      </div>
+    </section>
+
+    <!-- Location / Contact -->
+<section id="location" class="section location parallax parallax-primary" aria-label="Connect With Us">
+  <div class="container">
+
+    <!-- Section Title -->
+    <h2 class="section-title">Connect With Us</h2>
+
+    <!-- Two Column Layout -->
+    <div class="contact-section-grid">
+
+      <!-- Left Side: Contact Boxes -->
+      <div class="contact-left">
+  <div class="contact-box">
+    <div class="contact-title">
+      <i class="fa-solid fa-phone"></i>
+      <h4>Phone</h4>
+    </div>
+    <p><a href="tel:+910000000000">+91 00000 00000</a></p>
+  </div>
+
+  <div class="contact-box">
+    <div class="contact-title">
+      <i class="fa-solid fa-envelope"></i>
+      <h4>Email</h4>
+    </div>
+    <p><a href="mailto:info@solcon.example">info@solcon.example</a></p>
+  </div>
+
+  <div class="contact-box">
+    <div class="contact-title">
+      <i class="fa-solid fa-location-dot"></i>
+      <h4>Address</h4>
+    </div>
+    <p>
+      Solcon Engineering Consultants,<br>
+      Vadodara, Gujarat, India
+    </p>
+  </div>
+</div>
+
+
+      <!-- Right Side: Contact Form -->
+      <div class="contact-right">
+        <h3>Reach out to us</h3>
+        <form id="contact-form" class="contact-form" novalidate>
+          <div class="form-row">
+            <label>
+              Name
+              <input type="text" name="name" required />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" required />
+            </label>
+          </div>
+          <label>
+            Phone
+            <input type="tel" name="phone" />
+          </label>
+          <label>
+            Message
+            <textarea name="message" rows="4" required></textarea>
+          </label>
+          <button type="submit" class="btn-primary">Send</button>
+          <p id="form-status" role="status" aria-live="polite"></p>
+        </form>
+      </div>
+
+    </div>
+
+    <!-- Social Drawer -->
+    <aside class="social-drawer" aria-label="Social Media Drawer">
+      <button class="social-drawer-toggle" aria-expanded="false" aria-controls="social-drawer-panel"></button>
+      <div id="social-drawer-panel" class="social-drawer-panel">
+        <nav class="social-icons" role="navigation" aria-label="Social Media Links">
+          <a href="#" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener">
+            <img src="icons/facebook.svg" alt="Facebook" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener">
+            <img src="icons/instagram.svg" alt="Instagram" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Slideshare" target="_blank" rel="noopener">
+            <img src="icons/slideshare.svg" alt="Slideshare" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="YouTube" target="_blank" rel="noopener">
+            <img src="icons/youtube.svg" alt="YouTube" width="36" height="36" />
+          </a>
+        </nav>
+      </div>
+    </aside>
+
+  </div>
+</section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Solcon. All rights reserved.</p>
+      <a href="#top" class="back-to-top" aria-label="Back to top">
+        <i class="fas fa-arrow-up"></i>
+      </a>
+    </div>
+</footer>
+
+  <!-- Include Mammoth to parse .docx in the browser -->
+  <script src="https://unpkg.com/mammoth/mammoth.browser.min.js"></script>
+  <script src="js/app.js" defer></script>
+  <script>
+document.addEventListener("DOMContentLoaded", function () {
+  const hamburger = document.querySelector(".hamburger");
+  const mainNav = document.getElementById("main-nav");
+  const dropdownToggles = document.querySelectorAll(".dropdown-toggle");
+
+  // Hamburger toggle
+  hamburger.addEventListener("click", () => {
+    mainNav.classList.toggle("active");
+    const expanded = hamburger.getAttribute("aria-expanded") === "true";
+    hamburger.setAttribute("aria-expanded", !expanded);
+  });
+
+  // Dropdown toggle
+  dropdownToggles.forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      e.preventDefault(); // prevent link navigation
+      const parent = btn.parentElement;
+
+      // Close other dropdowns
+      document.querySelectorAll(".nav-item.dropdown").forEach((item) => {
+        if (item !== parent) item.classList.remove("open");
+      });
+
+      // Toggle current dropdown
+      parent.classList.toggle("open");
+
+      // Update aria-expanded
+      const expanded = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", !expanded);
+    });
+  });
+});
+
+  </script>
+
+  <!-- Show More handled by js/app.js; inline script removed to avoid conflicts -->
+
+</body>
+</html>
