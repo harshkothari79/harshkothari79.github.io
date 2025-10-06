@@ -31,7 +31,7 @@
     .nav-list .dropdown-menu li a {
       padding: 8px 15px;
       display: block;
-      color: #333;
+      color: #0a3d62; /* match SOLCON brand color */
       text-decoration: none;
     }
 
@@ -154,8 +154,8 @@
       <div class="container">
         <h2 class="section-title">Newsroom</h2>
         <div id="newsroom-grid" class="grid grid-5"></div>
-        <div class="text-center" style="margin-top: 32px;">
-          <button id="newsroom-show-more" hidden>Show More</button>
+        <div class="center" style="margin-top: 32px;">
+          <button id="newsroom-show-more" class="btn-primary">Show More</button>
         </div>
       </div>
 
@@ -198,7 +198,7 @@
 
       <!-- Right Side Form -->
       <div class="careers-right">
-        <form id="careers-form" class="contact-form" novalidate>
+        <form id="careers-form" class="contact-form" action="https://formsubmit.co/solcon.hr@gmail.com" method="post" enctype="multipart/form-data">
           
           <!-- Row 1 -->
           <div class="form-row">
@@ -239,15 +239,21 @@
           <div class="form-row single">
             <label>
               Attach Resume <span>*</span>
-              <input type="file" name="resume" required />
+              <input type="file" name="attachment" required />
             </label>
           </div>
 
           <!-- Row 4 -->
           <div class="form-actions">
-            <button type="submit" class="btn-primary">Submit</button>
+            <button type="submit" class="btn-primary" formmethod="POST" formenctype="multipart/form-data">Submit</button>
             <button type="reset" class="btn-secondary">Reset</button>
           </div>
+
+          <!-- FormSubmit hidden fields -->
+          <input type="hidden" name="_subject" value="New Careers Application from Solcon Website" />
+          <input type="hidden" name="_template" value="table" />
+          <input type="hidden" name="_captcha" value="false" />
+          <input type="hidden" name="_next" value="thankyou.html?return=%2Fmore.html%23careers" />
 
           <p id="careers-status" role="status" aria-live="polite"></p>
         </form>

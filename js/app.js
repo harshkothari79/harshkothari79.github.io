@@ -142,6 +142,15 @@ function initCounters() {
   const io = new IntersectionObserver((entries) => {
     if (entries.some(e => e.isIntersecting) && !started) {
       started = true;
+      // Compute dynamic years in service from 1989 to current year
+      const yearsEl = counters[0];
+      if (yearsEl) {
+        const startYear = 1989;
+        const now = new Date();
+        const currentYear = now.getFullYear();
+        const years = Math.max(0, currentYear - startYear);
+        yearsEl.dataset.target = String(years);
+      }
       run();
       io.disconnect();
     }
@@ -277,8 +286,16 @@ const projectsData = {
     base: "Projects/Institutional and Public Buildings",
     items: [
       "1. AAI Bareilly Airport",
+      "2. Maharaja Ranjitsinh Institute  of Design , MSU",
+      "3. Institue of Fashion Technology,MSU",
+      "4. Faculty of Social works,MSU",
+      "5. Pandit Deendayal Auditorium, MSU",
+      "6. Institute Policy Research and International Studies,MSU",
       "7. Faculty of Pharmacy,MSU",
       "8. Kanta Stri Vikas Gruh",
+      "9. XL Smiles Dr.Praptis clinic",
+      "10. Essential Esthetics Dr.Neha Shah",
+      "11. Institute of Management Studies, MSU",
       "12. GSFC hostel Building"
     ]
   },
@@ -303,7 +320,7 @@ const projectsData = {
   "Unique Projects": {
     type: "flat",
     base: "Projects/Unique Projects",
-    items: ["1.png","2.jpg","3.png","4.jpg","5.jpg","6.jpg","7.png","8.png","9.jpg","10.png"]
+    items: ["4.jpg","2.jpg","3.png","1.png","6.jpg","5.jpg","8.png","7.png","10.png"]
   }
 };
 
@@ -410,8 +427,8 @@ function initProjects() {
   let expanded = false; // track expanded/collapsed state explicitly
 
   function getInitialMax() {
-    // Show only 6 project tiles initially regardless of layout
-    return 6;
+    // Show 12 project tiles initially for a 4x3 grid
+    return 12;
   }
 
   // Project Modal logic
@@ -473,13 +490,9 @@ function initProjects() {
 
   function updateButton() {
     if (!showMoreBtn) return;
-    if (expanded) {
-      showMoreBtn.hidden = currentList.length <= initialMax;
-      showMoreBtn.textContent = 'Show Less';
-    } else {
-      showMoreBtn.textContent = 'Show More';
-      showMoreBtn.hidden = currentList.length <= initialMax;
-    }
+    const shouldShow = (currentFilter !== 'All') && (currentList.length > initialMax);
+    showMoreBtn.hidden = !shouldShow;
+    showMoreBtn.textContent = expanded ? 'Show Less' : 'Show More';
   }
 
   async function buildCard(item) {
@@ -604,6 +617,9 @@ function initProjects() {
 
     // Show first page
     await renderChunk(initialMax);
+
+    // If should not show for this category, ensure button is hidden immediately
+    updateButton();
 
     // Wire Show More/Less toggle
     showMoreBtn.onclick = async () => {
@@ -999,6 +1015,12 @@ function buildClientsData() {
     else if (i >= 51 && i <= 74) category = 'Private Limited Companies';
     else if (i >= 75 && i <= 81) category = 'Government Organizations';
     else category = 'Associate Property International Consultants';
+    // Override specific indices for manual corrections
+    // Assumption: Knightfrank logo is at index 81 and should be moved to Associates
+    const overrides = {
+      81: 'Associate Property International Consultants'
+    };
+    if (overrides[i]) category = overrides[i];
     arr.push({ src, category, i });
   }
   return arr;
@@ -1095,7 +1117,9 @@ function initNewsroom() {
     images: group.images
   }));
 
+  const INITIAL_MAX = 3;
   const PAGE_SIZE = 3;
+  let expanded = false;
   let nextIndex = 0;
 
   function makeCard(item) {
@@ -1204,8 +1228,9 @@ function initNewsroom() {
   });
 
   function updateShowMore() {
-    // Always hide Show More for Newsroom: keep exactly 3 tiles visible
-    showMoreBtn.hidden = true;
+    // Show button only if there are more than initial tiles
+    showMoreBtn.hidden = allItems.length <= INITIAL_MAX;
+    showMoreBtn.textContent = expanded ? 'Show Less' : 'Show More';
   }
 
   async function renderChunk(count){
@@ -1220,28 +1245,40 @@ function initNewsroom() {
   }
 
   // Initial render
-  renderChunk(3);
+  renderChunk(INITIAL_MAX);
 
-  showMoreBtn.onclick = () => renderChunk(PAGE_SIZE);
+  showMoreBtn.onclick = async () => {
+    if (!expanded) {
+      // Expand: render remaining items
+      const firstNewIndex = nextIndex;
+      await renderChunk(allItems.length - nextIndex);
+      expanded = true;
+      updateShowMore();
+      const firstNew = grid.children[firstNewIndex];
+      if (firstNew) {
+        try { firstNew.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) { firstNew.scrollIntoView(); }
+      }
+    } else {
+      // Collapse back to initial tiles
+      grid.innerHTML = '';
+      nextIndex = 0;
+      await renderChunk(INITIAL_MAX);
+      expanded = false;
+      updateShowMore();
+      try { grid.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); } catch (_) { grid.scrollIntoView(); }
+    }
+  };
 }
 
 // Forms
 function initForms() {
   const contact = $('#contact-form');
   if (contact) {
-    on(contact, 'submit', (e) => {
-      e.preventDefault();
-      $('#form-status').textContent = 'Thanks! We will get back to you shortly.';
-      contact.reset();
-    });
+    // Allow native submission to external service (FormSubmit)
   }
   const careers = $('#careers-form');
   if (careers) {
-    on(careers, 'submit', (e) => {
-      e.preventDefault();
-      $('#careers-status').textContent = 'Application submitted. Our team will reach out if there is a match.';
-      careers.reset();
-    });
+    // Allow native submission to external service (FormSubmit)
   }
 }
 

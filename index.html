@@ -30,10 +30,10 @@
 }
 
 /* Desktop dropdown items */
-.nav-list .dropdown-menu li a {
+  .nav-list .dropdown-menu li a {
   padding: 8px 15px;
   display: block;
-  color: #333;
+  color: #0a3d62; /* match SOLCON brand color */
   text-decoration: none;
 }
 
@@ -151,8 +151,8 @@
             <div class="stat-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V8l8-4 8 4v12z"></path><path d="M12 10v4"></path><path d="M12 16h.01"></path></svg>
             </div>
-            <div class="stat-number" data-target="1989">0</div>
-            <div class="stat-label">Founded</div>
+            <div class="stat-number" data-target="0">0</div>
+            <div class="stat-label">Years in Service</div>
           </div>
           <div class="stat">
             <div class="stat-icon" aria-hidden="true">
@@ -166,21 +166,21 @@
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20s-7-4.5-7-10a7 7 0 0 1 14 0c0 5.5-7 10-7 10z"></path><path d="M12 12a2 2 0 1 0 0-4 2 2 0 0 0 0 4z"></path></svg>
             </div>
             <div class="stat-number" data-target="100" data-suffix="+">0</div>
-            <div class="stat-label">Happy Clients</div>
+            <div class="stat-label">Clients Served</div>
           </div>
           <div class="stat">
             <div class="stat-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3 7h7l-5.5 4 2.5 7-7-4.5L5 20l2.5-7L2 9h7z"></path></svg>
             </div>
             <div class="stat-number" data-target="25" data-suffix="+">0</div>
-            <div class="stat-label">Awards</div>
+            <div class="stat-label">Awards and Recognitions</div>
           </div>
           <div class="stat">
             <div class="stat-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"></path><path d="M12 2v20"></path><circle cx="12" cy="12" r="9"></circle></svg>
             </div>
             <div class="stat-number" data-target="10" data-suffix="+">0</div>
-            <div class="stat-label">Countries</div>
+            <div class="stat-label">Global Outreach</div>
           </div>
         </div>
       </div>
@@ -315,33 +315,71 @@
 </div>
 
 
-      <!-- Right Side: Contact Form -->
+      <!-- Right Side: Google Map -->
       <div class="contact-right">
-        <h3>Reach out to us</h3>
-        <form id="contact-form" class="contact-form" novalidate>
-          <div class="form-row">
-            <label>
-              Name
-              <input type="text" name="name" required />
-            </label>
-            <label>
-              Email
-              <input type="email" name="email" required />
-            </label>
-          </div>
-          <label>
-            Phone
-            <input type="tel" name="phone" />
-          </label>
-          <label>
-            Message
-            <textarea name="message" rows="4" required></textarea>
-          </label>
-          <button type="submit" class="btn-primary">Send</button>
-          <p id="form-status" role="status" aria-live="polite"></p>
-        </form>
+        <div class="map-card">
+          <p>
+            View Solcon Office on Google:
+            <a href="https://www.google.com/maps/search/?api=1&query=Solcon+Engineering+Consultants+Vadodara" target="_blank" rel="noopener">Open in Google Maps</a>
+          </p>
+          <iframe
+            class="map-frame"
+            title="Solcon Office Map"
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade"
+            src="https://www.google.com/maps?q=Solcon+Engineering+Consultants+Vadodara&output=embed"
+          ></iframe>
+        </div>
       </div>
 
+    </div>
+
+    <!-- Full-Width Contact Form -->
+    <div class="contact-full-form">
+      <h3>Reach out to us</h3>
+      <form id="contact-form" class="contact-form" method="POST" action="https://formsubmit.co/info@solconconsultants.com">
+        <input type="hidden" name="_subject" value="Solcon Website Contact Form" />
+        <input type="hidden" name="_template" value="table" />
+        <input type="hidden" name="_captcha" value="false" />
+        <input type="hidden" name="_next" value="thankyou.html?return=%2Findex.html%23location" />
+        <div class="form-row">
+          <label>
+            Name
+            <input type="text" name="name" required />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" required />
+          </label>
+        </div>
+        <label>
+          Phone
+          <input type="tel" name="phone" />
+        </label>
+        <label>
+          Message
+          <textarea name="message" rows="4" required></textarea>
+        </label>
+        <button type="submit" class="btn-primary">Send</button>
+        <nav class="social-icons" role="navigation" aria-label="Connect Social Links">
+          <a href="#" class="social-icon" aria-label="LinkedIn" target="_blank" rel="noopener">
+            <img src="icons/linkedin.svg" alt="LinkedIn" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener">
+            <img src="icons/facebook.svg" alt="Facebook" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Instagram" target="_blank" rel="noopener">
+            <img src="icons/instagram.svg" alt="Instagram" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="Slideshare" target="_blank" rel="noopener">
+            <img src="icons/slideshare.svg" alt="Slideshare" width="36" height="36" />
+          </a>
+          <a href="#" class="social-icon" aria-label="YouTube" target="_blank" rel="noopener">
+            <img src="icons/youtube.svg" alt="YouTube" width="36" height="36" />
+          </a>
+        </nav>
+        <p id="form-status" role="status" aria-live="polite"></p>
+      </form>
     </div>
 
     <!-- Social Drawer -->
@@ -349,6 +387,9 @@
       <button class="social-drawer-toggle" aria-expanded="false" aria-controls="social-drawer-panel"></button>
       <div id="social-drawer-panel" class="social-drawer-panel">
         <nav class="social-icons" role="navigation" aria-label="Social Media Links">
+          <a href="#" class="social-icon" aria-label="LinkedIn" target="_blank" rel="noopener">
+            <img src="icons/linkedin.svg" alt="LinkedIn" width="36" height="36" />
+          </a>
           <a href="#" class="social-icon" aria-label="Facebook" target="_blank" rel="noopener">
             <img src="icons/facebook.svg" alt="Facebook" width="36" height="36" />
           </a>

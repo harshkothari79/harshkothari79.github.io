@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Thank You | Solcon</title>
+  <link rel="icon" href="Logo.png" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-container">
+      <a class="logo" href="index.html" aria-label="Home">
+        <img src="Logo.png" alt="Solcon Logo" />
+      </a>
+    </div>
+  </header>
+  <main>
+    <section class="section" aria-label="Thank You">
+      <div class="container">
+        <h2 class="section-title">Thank you!</h2>
+        <p>Your message has been sent successfully. We will get back to you soon.</p>
+        <p>Redirecting back in <span id="countdown">30</span> seconds…</p>
+        <p><a id="return-link" href="index.html">Return now</a></p>
+      </div>
+    </section>
+  </main>
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <p>© <span id="year"></span> Solcon. All rights reserved.</p>
+      <a href="#top" class="back-to-top" aria-label="Back to top">
+        ↑
+      </a>
+    </div>
+  </footer>
+  <script src="js/app.js" defer></script>
+  <script>
+    (function () {
+      const params = new URLSearchParams(window.location.search);
+      const target = params.get('return') || 'index.html';
+      const countdownEl = document.getElementById('countdown');
+      const linkEl = document.getElementById('return-link');
+      if (linkEl) linkEl.href = target;
+      let remaining = 30;
+      if (countdownEl) countdownEl.textContent = String(remaining);
+      const tick = setInterval(() => {
+        remaining -= 1;
+        if (countdownEl) countdownEl.textContent = String(remaining);
+        if (remaining <= 0) {
+          clearInterval(tick);
+          window.location.href = target;
+        }
+      }, 1000);
+    })();
+  </script>
+</body>
+</html>
