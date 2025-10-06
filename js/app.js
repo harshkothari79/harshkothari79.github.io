@@ -330,9 +330,10 @@ const baseImageExts = [
 const imageExts = Array.from(new Set(baseImageExts.flatMap(e => [e, e.toUpperCase()])));
 
 function encodePath(parts) {
-  // Make a URL-safe path but preserve slashes
-  const joined = parts.join('/').replace(/\\/g, '/');
-  return encodeURI(joined);
+  // Encode each path segment robustly to avoid special-char issues on servers
+  // This encodes spaces, ampersands, parentheses, etc., while preserving slashes
+  const segments = parts.map(p => encodeURIComponent(String(p).replace(/\\/g, '/')));
+  return segments.join('/');
 }
 
 async function probeImage(src) {
@@ -345,7 +346,7 @@ async function probeImage(src) {
 }
 
 // Faster probe with timeout to avoid long waits on missing files
-function probeImageWithTimeout(src, timeoutMs = 300) {
+function probeImageWithTimeout(src, timeoutMs = 1200) {
   return Promise.race([
     probeImage(src),
     new Promise(resolve => setTimeout(() => resolve(null), timeoutMs))
@@ -386,7 +387,7 @@ async function collectProjectSlides(base, maxIndex = 80, earlyStopMisses = 6) {
     for (const ext of projectImageExts) {
       const src = `${base}/${i}.${ext}`;
       // eslint-disable-next-line no-await-in-loop
-      const ok = await probeImageWithTimeout(src, 300);
+      const ok = await probeImageWithTimeout(src); // use default higher timeout for production
       if (ok) { found = ok; break; }
     }
     if (found) {
@@ -437,6 +438,7 @@ function initProjects() {
   const prevBtn = projectModal ? projectModal.querySelector('.slide-nav.prev') : null;
   const nextBtn = projectModal ? projectModal.querySelector('.slide-nav.next') : null;
   const modalTitle = $('#project-modal-title');
+  const slideCounter = projectModal ? projectModal.querySelector('#project-slide-counter') : null;
   let currentSlides = [];
   let currentIndex = 0;
 
@@ -451,6 +453,13 @@ function initProjects() {
     img.style.height = 'auto';
     img.style.objectFit = 'contain';
     slidesContainer.appendChild(img);
+
+    // Update slide counter text
+    if (slideCounter) {
+      const total = currentSlides.length;
+      const pos = total ? (currentIndex + 1) : 0;
+      slideCounter.textContent = `Image ${pos} of ${total}`;
+    }
   }
 
   function openProjectModal(title, slides) {

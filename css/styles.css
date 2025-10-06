@@ -846,6 +846,13 @@
             box-shadow: var(--shadow-strong);
         }
 
+        /* Slide counter for project modal */
+        #project-slide-counter {
+          margin: 8px 0 12px;
+          font-size: 0.95rem;
+          color: #555;
+        }
+
         .modal[aria-hidden="false"] .modal-content {
             transform: scale(1);
         }
