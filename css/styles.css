@@ -27,6 +27,16 @@
             scroll-padding-top: 105px; /* Adjusted for taller navbar (1.5x) */
         }
 
+        /* Offset page content so it sits below the fixed navbar */
+        main {
+            margin-top: 105px; /* match .site-header height */
+        }
+
+        /* Ensure anchor navigation (e.g., #sustainability) accounts for fixed header */
+        .section[id] {
+            scroll-margin-top: 105px; /* prevent headings from hiding beneath navbar on hash navigation */
+        }
+
         body {
             font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
             line-height: 1.6;
