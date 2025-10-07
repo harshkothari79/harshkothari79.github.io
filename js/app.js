@@ -1,7 +1,16 @@
 // Utilities
 const $ = (sel, ctx = document) => ctx.querySelector(sel);
 const $$ = (sel, ctx = document) => Array.from(ctx.querySelectorAll(sel));
-const on = (el, ev, fn) => el && el.addEventListener(ev, fn);
+// Event helper with basic guards and passive defaults for scroll/touch
+const on = (el, ev, fn, opts) => {
+  if (!el || !ev || typeof fn !== 'function') return;
+  const passiveDefault = /^(touchstart|touchmove|touchend|wheel|scroll)$/i.test(ev);
+  const options = (opts && typeof opts === 'object') ? opts : (passiveDefault ? { passive: true } : undefined);
+  try { el.addEventListener(ev, fn, options); } catch(_) { el.addEventListener(ev, fn); }
+};
+
+// Global neutral placeholder image used across modals and image fallbacks
+const NEUTRAL_PLACEHOLDER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
 
 function setYear() {
   const y = new Date().getFullYear();
@@ -196,16 +205,20 @@ function initReveal(){
     return;
   }
 
-  const io = new IntersectionObserver((entries, observer) => {
+  const io = ('IntersectionObserver' in window) ? new IntersectionObserver((entries, observer) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add('is-visible');
         observer.unobserve(entry.target);
       }
     });
-  }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' });
+  }, { threshold: 0.15, rootMargin: '0px 0px -10% 0px' }) : null;
 
-  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  if (io) {
+    document.querySelectorAll('.reveal').forEach(el => io.observe(el));
+  } else {
+    document.querySelectorAll('.reveal').forEach(el => el.classList.add('is-visible'));
+  }
 }
 
 // Scroll progress bar at top of page
@@ -231,7 +244,8 @@ function initScrollProgress(){
     });
   };
   update();
-  on(window, 'scroll', onScroll);
+  // passive scroll for iOS stability
+  window.addEventListener('scroll', onScroll, { passive: true });
   on(window, 'resize', update);
 }
 
@@ -511,8 +525,6 @@ function initProjects() {
   }
 
   function openProjectModal(title, slides) {
-    // Use a neutral 1x1 transparent png to avoid logo flashes
-    const NEUTRAL_PLACEHOLDER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
     currentSlides = (slides && slides.length) ? slides : [NEUTRAL_PLACEHOLDER];
     currentIndex = 0;
     if (modalTitle) modalTitle.textContent = title;
@@ -520,6 +532,7 @@ function initProjects() {
     if (projectModal) {
       projectModal.classList.add('show');
       projectModal.setAttribute('aria-hidden', 'false');
+      scrollLock.lock();
     }
   }
 
@@ -527,6 +540,7 @@ function initProjects() {
     if (!projectModal) return;
     projectModal.classList.remove('show');
     projectModal.setAttribute('aria-hidden', 'true');
+     scrollLock.unlock();
   }
 
   if (prevBtn) prevBtn.addEventListener('click', () => {
@@ -555,7 +569,7 @@ function initProjects() {
   }
 
   // Lazy thumbnail loader using IntersectionObserver
-  const thumbObserver = new IntersectionObserver((entries) => {
+  const thumbObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries) => {
     entries.forEach(async (entry) => {
       if (!entry.isIntersecting) return;
       const card = entry.target;
@@ -572,7 +586,7 @@ function initProjects() {
         img.src = card.dataset.singleImage;
       }
     });
-  }, { rootMargin: '800px' });
+  }, { rootMargin: '800px' }) : null;
 
   function buildCard(item) {
     const card = document.createElement('div');
@@ -616,7 +630,7 @@ function initProjects() {
       });
       card.addEventListener('keypress', (e) => { if (e.key === 'Enter') card.click(); });
       // Observe for lazy thumbnail replacement
-      thumbObserver.observe(card);
+      if (thumbObserver) thumbObserver.observe(card); else img.src = card.dataset.singleImage || img.src;
     } else {
       const src = encodePath([item.base, item.file]);
       // Use placeholder, load actual image when visible
@@ -1070,6 +1084,10 @@ function initServices() {
     if (modal){
       modal.classList.add('show');
       modal.setAttribute('aria-hidden','false');
+      // Lock body scrolling while service modal is open for iOS stability
+      if (typeof scrollLock !== 'undefined' && scrollLock && typeof scrollLock.lock === 'function') {
+        scrollLock.lock();
+      }
     }
     updateModalContent();
   }
@@ -1085,6 +1103,10 @@ function initServices() {
   $$('.modal [data-close="modal"]').forEach(b => on(b, 'click', () => {
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden','true');
+    // Unlock body scrolling when service modal closes
+    if (typeof scrollLock !== 'undefined' && scrollLock && typeof scrollLock.unlock === 'function') {
+      scrollLock.unlock();
+    }
   }));
 
   // Keyboard navigation within service modal
@@ -1097,6 +1119,9 @@ function initServices() {
     } else if (e.key === 'Escape') {
       modal.classList.remove('show');
       modal.setAttribute('aria-hidden','true');
+      if (typeof scrollLock !== 'undefined' && scrollLock && typeof scrollLock.unlock === 'function') {
+        scrollLock.unlock();
+      }
     }
   });
 }
@@ -1349,6 +1374,7 @@ function initNewsroom() {
     if (modal) {
       modal.classList.add('show');
       modal.setAttribute('aria-hidden','false');
+      scrollLock.lock();
     }
   }
 
@@ -1356,6 +1382,7 @@ function initNewsroom() {
     if (!modal) return;
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden','true');
+     scrollLock.unlock();
   }
 
   if (prevBtn) prevBtn.addEventListener('click', () => {
@@ -1495,11 +1522,13 @@ function initSustainability() {
     renderSlide();
     modal.classList.add('show');
     modal.setAttribute('aria-hidden', 'false');
+    scrollLock.lock();
   }
 
   function closeModal() {
     modal.classList.remove('show');
     modal.setAttribute('aria-hidden', 'true');
+    scrollLock.unlock();
   }
 
   prevBtn.addEventListener('click', () => {
@@ -1628,3 +1657,24 @@ function initParallaxCssVars() {
   root.style.setProperty('--pY', '0');
   root.style.setProperty('--heroPY', '0');
 }
+// Body scroll lock helpers for modals (iOS-friendly)
+const scrollLock = (() => {
+  let locked = 0;
+  let prev = { top: 0 };
+  return {
+    lock() {
+      if (locked++ > 0) return;
+      prev.top = window.scrollY || window.pageYOffset || 0;
+      document.body.style.position = 'fixed';
+      document.body.style.top = `-${prev.top}px`;
+      document.body.style.width = '100%';
+    },
+    unlock() {
+      if (--locked > 0) return;
+      document.body.style.position = '';
+      document.body.style.top = '';
+      document.body.style.width = '';
+      window.scrollTo(0, prev.top || 0);
+    }
+  };
+})();
