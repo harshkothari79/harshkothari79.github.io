@@ -361,12 +361,13 @@ function probeImageWithTimeout(src, timeoutMs = 1200) {
   ]);
 }
 async function findThumb(base) {
-  // Try first few indices with broad extensions; use slightly longer timeouts for reliability on live hosts
-  const indices = [1, 2, 3, 4, 5];
+  // Probe minimally: only index 1 and common extensions (lower/upper)
+  const indices = [1];
+  const exts = ['jpg', 'jpeg', 'png', 'webp', 'JPG', 'JPEG', 'PNG', 'WEBP'];
   for (const i of indices) {
-    const candidates = projectImageExts.map(ext => `${base}/${i}.${ext}`);
+    const candidates = exts.map(ext => `${base}/${i}.${ext}`);
     // eslint-disable-next-line no-await-in-loop
-    const results = await Promise.all(candidates.map(src => probeImageWithTimeout(src, 800)));
+    const results = await Promise.all(candidates.map(src => probeImageWithTimeout(src, 600)));
     const found = results.find(Boolean);
     if (found) return found;
   }
@@ -385,50 +386,56 @@ async function findThumbCached(base) {
   return thumb;
 }
 
-async function collectSlides(base, max = 30) {
+async function collectSlides(base, max = 24, initialRange = 8) {
   const slides = [];
+  let extHint = null; // reuse first detected extension
+  let misses = 0;
   for (let i = 1; i <= max; i++) {
-    let found = null;
-    // Use a broad set of common extensions (lower + upper) for reliability
-    const exts = [...baseImageExts, 'JPG','JPEG','PNG','WEBP','GIF','BMP','TIF','TIFF'];
-    for (const ext of exts) {
-      const src = `${base}/${i}.${ext}`;
-      // eslint-disable-next-line no-await-in-loop
-      const ok = await probeImage(src);
-      if (ok) { found = ok; break; }
+    const exts = extHint ? [extHint] : ['jpg','JPG'];
+    // eslint-disable-next-line no-await-in-loop
+    const results = await Promise.all(exts.map(ext => probeImageWithTimeout(`${base}/${i}.${ext}`, 700)));
+    const found = results.find(Boolean);
+    if (found) {
+      slides.push(found);
+      misses = 0;
+      if (!extHint) {
+        const idx = results.findIndex(Boolean);
+        if (idx >= 0) extHint = exts[idx];
+      }
+    } else {
+      misses++;
+      if (!slides.length && i >= initialRange) break; // no images in early range, stop
+      if (slides.length && misses >= 2 && i >= initialRange) break; // stop after gaps
     }
-    if (found) slides.push(found);
   }
   return slides;
 }
 
-// Optimized collector for Projects: parallel probing in small chunks with early-stop
-const projectImageExts = ['jpg','jpeg','png','webp','gif','bmp','JPG','JPEG','PNG','WEBP','GIF','BMP'];
-async function collectProjectSlides(base, maxIndex = 100, chunkSize = 12, emptyChunkStop = 4, timeoutMs = 800) {
+// Optimized collector for Projects: include broad extensions and scan full range
+// Use common extensions in lower + upper case; prioritize detected ext but still probe others
+const projectImageExts = [
+  'jpg','jpeg','png','webp','gif','bmp','tif','tiff','svg','avif','heic','jfif',
+  'JPG','JPEG','PNG','WEBP','GIF','BMP','TIF','TIFF','SVG','AVIF','HEIC','JFIF'
+];
+async function collectProjectSlides(base, maxIndex = 60, initialRange = 6, timeoutMs = 800) {
   const slides = [];
-  let emptyChunks = 0;
-  for (let start = 1; start <= maxIndex; start += chunkSize) {
-    const end = Math.min(start + chunkSize - 1, maxIndex);
-    const probes = [];
-    for (let i = start; i <= end; i++) {
-      probes.push((async () => {
-        const results = await Promise.all(
-          projectImageExts.map(ext => probeImageWithTimeout(`${base}/${i}.${ext}`, timeoutMs))
-        );
-        return results.find(Boolean) || null;
-      })());
-    }
+  let extHint = null; // prioritize this extension but keep probing others per index
+  for (let i = 1; i <= maxIndex; i++) {
+    const prioritized = extHint ? [extHint, ...projectImageExts.filter(e => e !== extHint)] : projectImageExts;
     // eslint-disable-next-line no-await-in-loop
-    const chunkResults = await Promise.all(probes);
-    const foundThisChunk = chunkResults.filter(Boolean);
-    slides.push(...foundThisChunk);
-    if (foundThisChunk.length === 0) {
-      emptyChunks++;
-    } else {
-      emptyChunks = 0;
+    const results = await Promise.all(
+      prioritized.map(ext => probeImageWithTimeout(`${base}/${i}.${ext}`, timeoutMs))
+    );
+    const found = results.find(Boolean) || null;
+    if (found) {
+      slides.push(found);
+      // lock on the first working extension to prioritize next probes
+      if (!extHint) {
+        const idx = results.findIndex(Boolean);
+        if (idx >= 0) extHint = prioritized[idx];
+      }
     }
-    // Stop after consecutive empty chunks once we've found some images
-    if (slides.length && emptyChunks >= emptyChunkStop) break;
+    // do not early-stop; scan the full numeric range so later images load
   }
   return slides;
 }
@@ -560,8 +567,7 @@ function initProjects() {
         const base = card.dataset.slideshowBase;
         const thumb = await findThumbCached(base);
         if (thumb) img.src = thumb; // replace placeholder with real thumb
-        // Prefetch slides in the background for lightning-fast modal opening
-        getProjectSlidesCached(base).catch(() => {});
+        // Avoid background prefetch to reduce 404 noise on servers
       } else if (card.dataset.singleImage) {
         img.src = card.dataset.singleImage;
       }
@@ -628,8 +634,17 @@ function initProjects() {
       card.dataset.singleImage = src;
       card.dataset.projectTitle = title.textContent;
 
-      card.addEventListener('click', () => {
-        openProjectModal(title.textContent, [src]);
+      card.addEventListener('click', async () => {
+        // Try cached slides first; if none, probe full range with broad extensions
+        const base = encodePath([item.base, item.file.replace(/\.[^.]+$/, '')]);
+        let slides = [];
+        try {
+          slides = await getProjectSlidesCached(base);
+        } catch(_) {}
+        if (!slides || !slides.length) {
+          try { slides = await collectProjectSlides(base); } catch(_) {}
+        }
+        openProjectModal(title.textContent, slides && slides.length ? slides : [src]);
       });
       card.addEventListener('keypress', (e) => { if (e.key === 'Enter') card.click(); });
       // Observe for lazy image load
@@ -1096,6 +1111,7 @@ function buildClientsData() {
   const arr = [];
   for (let i = 1; i <= 84; i++) {
     const src = `Partner-logo/logo.${i}.jpg`;
+    const base = `Partner-logo/logo.${i}`; // extension-neutral base for probing
     let category = '';
     if (i >= 1 && i <= 25) category = 'Public Companies';
     else if (i >= 26 && i <= 50) category = 'Multinational Companies';
@@ -1108,7 +1124,7 @@ function buildClientsData() {
       81: 'Associate Property International Consultants'
     };
     if (overrides[i]) category = overrides[i];
-    arr.push({ src, category, i });
+    arr.push({ src, base, category, i });
   }
   return arr;
 }
@@ -1121,6 +1137,33 @@ function initClients() {
 
   if (!grid) return; // safety guard if clients grid is not present
 
+  const clientLogoExts = ['jpg','JPG'];
+  async function resolveClientLogo(base) {
+    const candidates = clientLogoExts.map(ext => `${base}.${ext}`);
+    const results = await Promise.all(candidates.map(src => probeImageWithTimeout(src, 600)));
+    return results.find(Boolean) || null;
+  }
+
+  // Lazy loader for client logos: probe first, then set src to avoid 404s
+  const logoObserver = ('IntersectionObserver' in window) ? new IntersectionObserver((entries, observer) => {
+    entries.forEach(entry => {
+      if (!entry.isIntersecting) return;
+      const img = entry.target;
+      const base = img.dataset.logoBase;
+      observer.unobserve(img);
+      // Probe available extensions and set found src; else keep placeholder
+      resolveClientLogo(base).then(found => {
+        if (found) {
+          img.src = found;
+        } else {
+          img.src = NEUTRAL_PLACEHOLDER;
+          img.style.objectFit = 'contain';
+          img.style.background = '#ffffff';
+        }
+      });
+    });
+  }, { threshold: 0.15, rootMargin: '100px' }) : null;
+
   function render() {
     grid.innerHTML = '';
     const list = all.filter(x => x.category === current);
@@ -1130,12 +1173,23 @@ function initClients() {
       const wrap = document.createElement('div');
       wrap.classList.add('client-card');
       const img = document.createElement('img');
-      img.src = item.src;
+      // Set placeholder; actual logo loaded lazily after probing across extensions
+      img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
       img.alt = `${item.category} logo ${item.i}`;
       img.loading = 'lazy';
+      img.dataset.logoBase = item.base;
       img.onerror = () => { img.src = NEUTRAL_PLACEHOLDER; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
       wrap.appendChild(img);
       grid.appendChild(wrap);
+      if (logoObserver) {
+        logoObserver.observe(img);
+      } else {
+        // Fallback: resolve immediately without IO
+        resolveClientLogo(item.base).then(found => {
+          img.src = found || NEUTRAL_PLACEHOLDER;
+          if (!found) { img.style.objectFit = 'contain'; img.style.background = '#ffffff'; }
+        });
+      }
     });
 
     if (showMore) {
@@ -1145,12 +1199,22 @@ function initClients() {
           const wrap = document.createElement('div');
           wrap.classList.add('client-card');
           const img = document.createElement('img');
-          img.src = item.src;
+          // Placeholder first; lazy probe load
+          img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
           img.alt = `${item.category} logo ${item.i}`;
           img.loading = 'lazy';
+          img.dataset.logoBase = item.base;
           img.onerror = () => { img.src = NEUTRAL_PLACEHOLDER; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
           wrap.appendChild(img);
           grid.appendChild(wrap);
+          if (logoObserver) {
+            logoObserver.observe(img);
+          } else {
+            resolveClientLogo(item.base).then(found => {
+              img.src = found || NEUTRAL_PLACEHOLDER;
+              if (!found) { img.style.objectFit = 'contain'; img.style.background = '#ffffff'; }
+            });
+          }
         });
         showMore.hidden = true;
       };
@@ -1252,11 +1316,7 @@ function initNewsroom() {
       const ok = await probeImage(candidate);
       if (ok) slides.push(ok);
     }
-    // Fallback: also try numeric sequence if nothing was found
-    if (!slides.length) {
-      const seq = await collectSlides(item.base, 150);
-      if (seq && seq.length) return seq;
-    }
+    // No numeric fallback: avoid probing folders to reduce 404 noise
     return slides.length ? slides : [NEUTRAL_PLACEHOLDER];
   }
 
@@ -1379,12 +1439,11 @@ function initSustainability() {
   // If static images already present, enhance with modal viewing; else, attempt auto-discovery
   const staticImgs = Array.from(grid.querySelectorAll('img'));
 
-  // Build slides by probing folder numerically if needed
+  // Build slides without numeric probing to avoid 404s
   async function discoverSlides() {
-    // Try known folder name
-    const base = 'Sustainability and CSR';
-    const slides = await collectSlides(base, 100);
-    return slides && slides.length ? slides : staticImgs.map(img => img.src);
+    // Prefer existing static images in the grid
+    const existing = staticImgs.map(img => img.src);
+    return existing.length ? existing : [NEUTRAL_PLACEHOLDER];
   }
 
   // Create a simple modal (reuse generic structure from CSS classes)
