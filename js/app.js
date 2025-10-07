@@ -330,9 +330,14 @@ const baseImageExts = [
 const imageExts = Array.from(new Set(baseImageExts.flatMap(e => [e, e.toUpperCase()])));
 
 function encodePath(parts) {
-  // Encode each path segment robustly to avoid special-char issues on servers
-  // This encodes spaces, ampersands, parentheses, etc., while preserving slashes
-  const segments = parts.map(p => encodeURIComponent(String(p).replace(/\\/g, '/')));
+  // Encode path segments while preserving directory separators.
+  // Handles inputs that may already contain slashes by splitting and encoding each sub-segment.
+  const segments = [];
+  for (const part of parts) {
+    const cleaned = String(part).replace(/\\/g, '/');
+    const sub = cleaned.split('/').filter(Boolean);
+    for (const s of sub) segments.push(encodeURIComponent(s));
+  }
   return segments.join('/');
 }
 
@@ -346,7 +351,7 @@ async function probeImage(src) {
 }
 
 // Faster probe with timeout to avoid long waits on missing files
-function probeImageWithTimeout(src, timeoutMs = 1200) {
+function probeImageWithTimeout(src, timeoutMs = 300) {
   return Promise.race([
     probeImage(src),
     new Promise(resolve => setTimeout(() => resolve(null), timeoutMs))
@@ -379,7 +384,7 @@ async function collectSlides(base, max = 30) {
 
 // Optimized collector for Projects: limit extensions and stop early after consecutive misses
 const projectImageExts = ['jpg','jpeg','png','JPG','JPEG','PNG'];
-async function collectProjectSlides(base, maxIndex = 80, earlyStopMisses = 6) {
+async function collectProjectSlides(base, maxIndex = 40, earlyStopMisses = 4, initialMissesLimit = 12) {
   const slides = [];
   let misses = 0;
   for (let i = 1; i <= maxIndex; i++) {
@@ -387,7 +392,7 @@ async function collectProjectSlides(base, maxIndex = 80, earlyStopMisses = 6) {
     for (const ext of projectImageExts) {
       const src = `${base}/${i}.${ext}`;
       // eslint-disable-next-line no-await-in-loop
-      const ok = await probeImageWithTimeout(src); // use default higher timeout for production
+      const ok = await probeImageWithTimeout(src);
       if (ok) { found = ok; break; }
     }
     if (found) {
@@ -395,6 +400,8 @@ async function collectProjectSlides(base, maxIndex = 80, earlyStopMisses = 6) {
       misses = 0;
     } else {
       misses++;
+      // Stop early even if no images found to prevent long delays
+      if (!slides.length && misses >= initialMissesLimit) break;
       // If we already have some slides and we hit too many consecutive misses, stop early
       if (slides.length && misses >= earlyStopMisses) break;
     }
