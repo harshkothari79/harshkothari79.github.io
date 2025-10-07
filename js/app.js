@@ -490,7 +490,9 @@ function initProjects() {
   }
 
   function openProjectModal(title, slides) {
-    currentSlides = (slides && slides.length) ? slides : ['Logo.png'];
+    // Use a neutral 1x1 transparent png to avoid logo flashes
+    const NEUTRAL_PLACEHOLDER = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
+    currentSlides = (slides && slides.length) ? slides : [NEUTRAL_PLACEHOLDER];
     currentIndex = 0;
     if (modalTitle) modalTitle.textContent = title;
     renderSlide();
@@ -560,10 +562,15 @@ function initProjects() {
     if (item.kind === 'subfolder') {
       const base = encodePath([item.base, item.name]);
       // Set placeholder immediately; real thumb loaded lazily via IntersectionObserver
-      img.src = 'Logo.png';
+      // lightweight transparent placeholder while probing
+      img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
       img.alt = `${item.category} - ${cleanProjectName(item.name)}`;
       img.loading = 'lazy';
-      img.onerror = () => { img.src = 'Logo.png'; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
+      img.onerror = () => {
+        img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
+        img.style.objectFit = 'contain';
+        img.style.background = '#ffffff';
+      };
 
       title.textContent = cleanProjectName(item.name);
       card.dataset.slideshowBase = base;
@@ -571,7 +578,7 @@ function initProjects() {
 
       card.addEventListener('click', async () => {
         // Open instantly with the visible thumbnail for a snappy UX
-        const initial = img.currentSrc || img.src || 'Logo.png';
+        const initial = img.currentSrc || img.src || 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
         openProjectModal(title.textContent, [initial]);
         try {
           const slides = await getProjectSlidesCached(base);
@@ -590,10 +597,15 @@ function initProjects() {
     } else {
       const src = encodePath([item.base, item.file]);
       // Use placeholder, load actual image when visible
-      img.src = 'Logo.png';
+      // lightweight transparent placeholder while probing
+      img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
       img.alt = `${item.category} - ${cleanProjectName(item.file)}`;
       img.loading = 'lazy';
-      img.onerror = () => { img.src = 'Logo.png'; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
+      img.onerror = () => {
+        img.src = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMB/ekmOmoAAAAASUVORK5CYII=';
+        img.style.objectFit = 'contain';
+        img.style.background = '#ffffff';
+      };
 
       title.textContent = cleanProjectName(item.file.replace(/\.[^.]+$/, ''));
       card.dataset.singleImage = src;
@@ -771,7 +783,7 @@ function initServices() {
       const iconImg = card.querySelector('.icon img');
       if (iconImg) {
         iconImg.onerror = () => {
-          iconImg.src = 'Logo.png';
+          iconImg.src = NEUTRAL_PLACEHOLDER;
           iconImg.style.objectFit = 'contain';
           iconImg.style.background = '#ffffff';
         };
@@ -801,7 +813,7 @@ function initServices() {
     // Fallback if banner image is missing
     if (banner) {
       banner.onerror = () => {
-        banner.src = 'Logo.png';
+        banner.src = NEUTRAL_PLACEHOLDER;
         banner.style.objectFit = 'contain';
         banner.style.background = '#ffffff';
       };
@@ -1104,7 +1116,7 @@ function initClients() {
       img.src = item.src;
       img.alt = `${item.category} logo ${item.i}`;
       img.loading = 'lazy';
-      img.onerror = () => { img.src = 'Logo.png'; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
+      img.onerror = () => { img.src = NEUTRAL_PLACEHOLDER; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
       wrap.appendChild(img);
       grid.appendChild(wrap);
     });
@@ -1119,7 +1131,7 @@ function initClients() {
           img.src = item.src;
           img.alt = `${item.category} logo ${item.i}`;
           img.loading = 'lazy';
-          img.onerror = () => { img.src = 'Logo.png'; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
+          img.onerror = () => { img.src = NEUTRAL_PLACEHOLDER; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
           wrap.appendChild(img);
           grid.appendChild(wrap);
         });
@@ -1190,7 +1202,7 @@ function initNewsroom() {
     img.alt = item.title;
     img.loading = 'lazy';
     img.onerror = () => {
-      img.src = 'Logo.png';
+      img.src = NEUTRAL_PLACEHOLDER;
       img.style.objectFit = 'contain';
       img.style.background = '#ffffff';
     };
@@ -1228,7 +1240,7 @@ function initNewsroom() {
       const seq = await collectSlides(item.base, 150);
       if (seq && seq.length) return seq;
     }
-    return slides.length ? slides : ['Logo.png'];
+    return slides.length ? slides : [NEUTRAL_PLACEHOLDER];
   }
 
   // Modal elements (specific to Newsroom)
@@ -1244,14 +1256,14 @@ function initNewsroom() {
     if (!slidesContainer || !currentSlides.length) return;
     slidesContainer.innerHTML = '';
     const img = document.createElement('img');
-    img.src = currentSlides[currentSlideIndex];
+    img.src = currentSlides[currentSlideIndex] || NEUTRAL_PLACEHOLDER;
     img.alt = modalTitle && modalTitle.textContent ? modalTitle.textContent : 'Newsroom image';
     img.loading = 'eager';
     slidesContainer.appendChild(img);
   }
 
   function openNewsroomModal(title, slides) {
-    currentSlides = slides && slides.length ? slides : ['Logo.png'];
+    currentSlides = slides && slides.length ? slides : [NEUTRAL_PLACEHOLDER];
     currentSlideIndex = 0;
     if (modalTitle) modalTitle.textContent = title;
     renderSlide();
@@ -1390,7 +1402,7 @@ function initSustainability() {
     if (!slidesContainer || !currentSlides.length) return;
     slidesContainer.innerHTML = '';
     const img = document.createElement('img');
-    img.src = currentSlides[currentSlideIndex];
+    img.src = currentSlides[currentSlideIndex] || NEUTRAL_PLACEHOLDER;
     img.alt = (modalTitle && modalTitle.textContent) ? modalTitle.textContent : 'Sustainability image';
     img.loading = 'eager';
     slidesContainer.appendChild(img);
@@ -1398,7 +1410,7 @@ function initSustainability() {
 
   function openModal(title, slides) {
     if (title && modalTitle) modalTitle.textContent = title;
-    currentSlides = slides && slides.length ? slides : ['Logo.png'];
+    currentSlides = slides && slides.length ? slides : [NEUTRAL_PLACEHOLDER];
     currentSlideIndex = 0;
     renderSlide();
     modal.classList.add('show');
@@ -1448,7 +1460,7 @@ function initSustainability() {
     const card = document.createElement('div');
     card.className = 'project-card';
     const img = document.createElement('img');
-    img.src = 'Logo.png';
+    img.src = NEUTRAL_PLACEHOLDER;
     img.alt = 'Sustainability';
     card.appendChild(img);
     grid.appendChild(card);
