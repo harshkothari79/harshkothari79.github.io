@@ -354,23 +354,34 @@ async function probeImage(src) {
 }
 
 // Faster probe with timeout to avoid long waits on missing files
-function probeImageWithTimeout(src, timeoutMs = 300) {
+function probeImageWithTimeout(src, timeoutMs = 1200) {
   return Promise.race([
     probeImage(src),
     new Promise(resolve => setTimeout(() => resolve(null), timeoutMs))
   ]);
 }
 async function findThumb(base) {
-  // Try file "1" with common project extensions, in parallel with short timeouts
-  const candidates = projectImageExts.map(ext => `${base}/1.${ext}`);
-  const results = await Promise.all(candidates.map(src => probeImageWithTimeout(src, 250)));
-  return results.find(Boolean) || null;
+  // Try first few indices with broad extensions; use slightly longer timeouts for reliability on live hosts
+  const indices = [1, 2, 3, 4, 5];
+  for (const i of indices) {
+    const candidates = projectImageExts.map(ext => `${base}/${i}.${ext}`);
+    // eslint-disable-next-line no-await-in-loop
+    const results = await Promise.all(candidates.map(src => probeImageWithTimeout(src, 800)));
+    const found = results.find(Boolean);
+    if (found) return found;
+  }
+  return null;
 }
 
 async function findThumbCached(base) {
-  if (thumbCache.has(base)) return thumbCache.get(base);
+  // If previously cached as null (slow live host), re-attempt
+  if (thumbCache.has(base)) {
+    const cached = thumbCache.get(base);
+    if (cached) return cached;
+    // fall through to re-probe
+  }
   const thumb = await findThumb(base);
-  thumbCache.set(base, thumb || null);
+  if (thumb) thumbCache.set(base, thumb);
   return thumb;
 }
 
@@ -378,7 +389,9 @@ async function collectSlides(base, max = 30) {
   const slides = [];
   for (let i = 1; i <= max; i++) {
     let found = null;
-    for (const ext of imageExts) {
+    // Use a broad set of common extensions (lower + upper) for reliability
+    const exts = [...baseImageExts, 'JPG','JPEG','PNG','WEBP','GIF','BMP','TIF','TIFF'];
+    for (const ext of exts) {
       const src = `${base}/${i}.${ext}`;
       // eslint-disable-next-line no-await-in-loop
       const ok = await probeImage(src);
@@ -390,8 +403,8 @@ async function collectSlides(base, max = 30) {
 }
 
 // Optimized collector for Projects: parallel probing in small chunks with early-stop
-const projectImageExts = ['jpg','jpeg','png','JPG','JPEG','PNG'];
-async function collectProjectSlides(base, maxIndex = 80, chunkSize = 10, emptyChunkStop = 2, timeoutMs = 250) {
+const projectImageExts = ['jpg','jpeg','png','webp','gif','bmp','JPG','JPEG','PNG','WEBP','GIF','BMP'];
+async function collectProjectSlides(base, maxIndex = 100, chunkSize = 12, emptyChunkStop = 4, timeoutMs = 800) {
   const slides = [];
   let emptyChunks = 0;
   for (let start = 1; start <= maxIndex; start += chunkSize) {
@@ -414,8 +427,6 @@ async function collectProjectSlides(base, maxIndex = 80, chunkSize = 10, emptyCh
     } else {
       emptyChunks = 0;
     }
-    // If first chunk had no images, stop immediately to keep modal snappy
-    if (start === 1 && foundThisChunk.length === 0) break;
     // Stop after consecutive empty chunks once we've found some images
     if (slides.length && emptyChunks >= emptyChunkStop) break;
   }
@@ -425,7 +436,8 @@ async function collectProjectSlides(base, maxIndex = 80, chunkSize = 10, emptyCh
 async function getProjectSlidesCached(base) {
   if (slidesCache.has(base)) return slidesCache.get(base);
   const slides = await collectProjectSlides(base);
-  slidesCache.set(base, slides);
+  // Only cache positive results; allow retries if none were found (e.g., due to timeouts)
+  if (slides && slides.length) slidesCache.set(base, slides);
   return slides;
 }
 
@@ -476,6 +488,8 @@ function initProjects() {
     img.src = currentSlides[currentIndex];
     img.alt = (modalTitle && modalTitle.textContent) ? modalTitle.textContent : 'Project image';
     img.loading = 'eager';
+    img.decoding = 'async';
+    img.fetchPriority = 'high';
     img.style.width = '100%';
     img.style.height = 'auto';
     img.style.objectFit = 'contain';
@@ -541,15 +555,18 @@ function initProjects() {
       thumbObserver.unobserve(card);
       const img = card.querySelector('img');
       if (!img) return;
+      img.decoding = 'async';
       if (card.dataset.slideshowBase) {
         const base = card.dataset.slideshowBase;
         const thumb = await findThumbCached(base);
         if (thumb) img.src = thumb; // replace placeholder with real thumb
+        // Prefetch slides in the background for lightning-fast modal opening
+        getProjectSlidesCached(base).catch(() => {});
       } else if (card.dataset.singleImage) {
         img.src = card.dataset.singleImage;
       }
     });
-  }, { rootMargin: '200px' });
+  }, { rootMargin: '800px' });
 
   function buildCard(item) {
     const card = document.createElement('div');
@@ -1259,6 +1276,8 @@ function initNewsroom() {
     img.src = currentSlides[currentSlideIndex] || NEUTRAL_PLACEHOLDER;
     img.alt = modalTitle && modalTitle.textContent ? modalTitle.textContent : 'Newsroom image';
     img.loading = 'eager';
+    img.decoding = 'async';
+    img.fetchPriority = 'high';
     slidesContainer.appendChild(img);
   }
 
@@ -1405,6 +1424,8 @@ function initSustainability() {
     img.src = currentSlides[currentSlideIndex] || NEUTRAL_PLACEHOLDER;
     img.alt = (modalTitle && modalTitle.textContent) ? modalTitle.textContent : 'Sustainability image';
     img.loading = 'eager';
+    img.decoding = 'async';
+    img.fetchPriority = 'high';
     slidesContainer.appendChild(img);
   }
 
