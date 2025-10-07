@@ -328,6 +328,9 @@ const baseImageExts = [
   'jpg','jpeg','png','webp','gif','bmp','tif','tiff','avif','heic','heif','jfif'
 ];
 const imageExts = Array.from(new Set(baseImageExts.flatMap(e => [e, e.toUpperCase()])));
+// Caches to avoid re-probing images repeatedly
+const thumbCache = new Map(); // key: base folder, value: thumbnail src or null
+const slidesCache = new Map(); // key: base folder, value: array of slide srcs
 
 function encodePath(parts) {
   // Encode path segments while preserving directory separators.
@@ -358,13 +361,17 @@ function probeImageWithTimeout(src, timeoutMs = 300) {
   ]);
 }
 async function findThumb(base) {
-  // Try file "1" with multiple extensions
-  for (const ext of imageExts) {
-    const candidate = `${base}/1.${ext}`;
-    const result = await probeImage(candidate);
-    if (result) return result;
-  }
-  return null;
+  // Try file "1" with common project extensions, in parallel with short timeouts
+  const candidates = projectImageExts.map(ext => `${base}/1.${ext}`);
+  const results = await Promise.all(candidates.map(src => probeImageWithTimeout(src, 250)));
+  return results.find(Boolean) || null;
+}
+
+async function findThumbCached(base) {
+  if (thumbCache.has(base)) return thumbCache.get(base);
+  const thumb = await findThumb(base);
+  thumbCache.set(base, thumb || null);
+  return thumb;
 }
 
 async function collectSlides(base, max = 30) {
@@ -382,30 +389,43 @@ async function collectSlides(base, max = 30) {
   return slides;
 }
 
-// Optimized collector for Projects: limit extensions and stop early after consecutive misses
+// Optimized collector for Projects: parallel probing in small chunks with early-stop
 const projectImageExts = ['jpg','jpeg','png','JPG','JPEG','PNG'];
-async function collectProjectSlides(base, maxIndex = 40, earlyStopMisses = 4, initialMissesLimit = 12) {
+async function collectProjectSlides(base, maxIndex = 80, chunkSize = 10, emptyChunkStop = 2, timeoutMs = 250) {
   const slides = [];
-  let misses = 0;
-  for (let i = 1; i <= maxIndex; i++) {
-    let found = null;
-    for (const ext of projectImageExts) {
-      const src = `${base}/${i}.${ext}`;
-      // eslint-disable-next-line no-await-in-loop
-      const ok = await probeImageWithTimeout(src);
-      if (ok) { found = ok; break; }
+  let emptyChunks = 0;
+  for (let start = 1; start <= maxIndex; start += chunkSize) {
+    const end = Math.min(start + chunkSize - 1, maxIndex);
+    const probes = [];
+    for (let i = start; i <= end; i++) {
+      probes.push((async () => {
+        const results = await Promise.all(
+          projectImageExts.map(ext => probeImageWithTimeout(`${base}/${i}.${ext}`, timeoutMs))
+        );
+        return results.find(Boolean) || null;
+      })());
     }
-    if (found) {
-      slides.push(found);
-      misses = 0;
+    // eslint-disable-next-line no-await-in-loop
+    const chunkResults = await Promise.all(probes);
+    const foundThisChunk = chunkResults.filter(Boolean);
+    slides.push(...foundThisChunk);
+    if (foundThisChunk.length === 0) {
+      emptyChunks++;
     } else {
-      misses++;
-      // Stop early even if no images found to prevent long delays
-      if (!slides.length && misses >= initialMissesLimit) break;
-      // If we already have some slides and we hit too many consecutive misses, stop early
-      if (slides.length && misses >= earlyStopMisses) break;
+      emptyChunks = 0;
     }
+    // If first chunk had no images, stop immediately to keep modal snappy
+    if (start === 1 && foundThisChunk.length === 0) break;
+    // Stop after consecutive empty chunks once we've found some images
+    if (slides.length && emptyChunks >= emptyChunkStop) break;
   }
+  return slides;
+}
+
+async function getProjectSlidesCached(base) {
+  if (slidesCache.has(base)) return slidesCache.get(base);
+  const slides = await collectProjectSlides(base);
+  slidesCache.set(base, slides);
   return slides;
 }
 
@@ -511,7 +531,25 @@ function initProjects() {
     showMoreBtn.textContent = expanded ? 'Show Less' : 'Show More';
   }
 
-  async function buildCard(item) {
+  // Lazy thumbnail loader using IntersectionObserver
+  const thumbObserver = new IntersectionObserver((entries) => {
+    entries.forEach(async (entry) => {
+      if (!entry.isIntersecting) return;
+      const card = entry.target;
+      thumbObserver.unobserve(card);
+      const img = card.querySelector('img');
+      if (!img) return;
+      if (card.dataset.slideshowBase) {
+        const base = card.dataset.slideshowBase;
+        const thumb = await findThumbCached(base);
+        if (thumb) img.src = thumb; // replace placeholder with real thumb
+      } else if (card.dataset.singleImage) {
+        img.src = card.dataset.singleImage;
+      }
+    });
+  }, { rootMargin: '200px' });
+
+  function buildCard(item) {
     const card = document.createElement('div');
     card.className = 'project-card';
 
@@ -521,8 +559,8 @@ function initProjects() {
 
     if (item.kind === 'subfolder') {
       const base = encodePath([item.base, item.name]);
-      const thumb = await findThumb(base) || 'Logo.png';
-      img.src = thumb;
+      // Set placeholder immediately; real thumb loaded lazily via IntersectionObserver
+      img.src = 'Logo.png';
       img.alt = `${item.category} - ${cleanProjectName(item.name)}`;
       img.loading = 'lazy';
       img.onerror = () => { img.src = 'Logo.png'; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
@@ -536,7 +574,7 @@ function initProjects() {
         const initial = img.currentSrc || img.src || 'Logo.png';
         openProjectModal(title.textContent, [initial]);
         try {
-          const slides = await collectProjectSlides(base, 80, 6);
+          const slides = await getProjectSlidesCached(base);
           if (slides && slides.length) {
             currentSlides = slides;
             currentIndex = 0;
@@ -547,9 +585,12 @@ function initProjects() {
         }
       });
       card.addEventListener('keypress', (e) => { if (e.key === 'Enter') card.click(); });
+      // Observe for lazy thumbnail replacement
+      thumbObserver.observe(card);
     } else {
       const src = encodePath([item.base, item.file]);
-      img.src = src;
+      // Use placeholder, load actual image when visible
+      img.src = 'Logo.png';
       img.alt = `${item.category} - ${cleanProjectName(item.file)}`;
       img.loading = 'lazy';
       img.onerror = () => { img.src = 'Logo.png'; img.style.objectFit = 'contain'; img.style.background = '#ffffff'; };
@@ -562,6 +603,8 @@ function initProjects() {
         openProjectModal(title.textContent, [src]);
       });
       card.addEventListener('keypress', (e) => { if (e.key === 'Enter') card.click(); });
+      // Observe for lazy image load
+      thumbObserver.observe(card);
     }
 
     const badge = document.createElement('div');
@@ -611,8 +654,7 @@ function initProjects() {
   async function renderChunk(count) {
     const end = Math.min(nextIndex + count, currentList.length);
     for (let i = nextIndex; i < end; i++) {
-      // eslint-disable-next-line no-await-in-loop
-      const card = await buildCard(currentList[i]);
+      const card = buildCard(currentList[i]);
       grid.appendChild(card);
       visibleCount++;
     }
@@ -1298,6 +1340,122 @@ function initForms() {
   }
 }
 
+// Sustainability & CSR
+function initSustainability() {
+  const grid = document.querySelector('#sustainability-grid');
+  if (!grid) return;
+
+  // If static images already present, enhance with modal viewing; else, attempt auto-discovery
+  const staticImgs = Array.from(grid.querySelectorAll('img'));
+
+  // Build slides by probing folder numerically if needed
+  async function discoverSlides() {
+    // Try known folder name
+    const base = 'Sustainability and CSR';
+    const slides = await collectSlides(base, 100);
+    return slides && slides.length ? slides : staticImgs.map(img => img.src);
+  }
+
+  // Create a simple modal (reuse generic structure from CSS classes)
+  let modal = document.getElementById('sustainability-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'sustainability-modal';
+    modal.className = 'modal';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.setAttribute('aria-labelledby', 'sustainability-modal-title');
+    modal.setAttribute('role', 'dialog');
+    modal.innerHTML = `
+      <div class="modal-backdrop" data-close="modal"></div>
+      <div class="modal-content">
+        <button class="modal-close" aria-label="Close" data-close="modal">&times;</button>
+        <h3 id="sustainability-modal-title">Sustainability & CSR</h3>
+        <div class="modal-nav">
+          <button class="slide-nav prev" aria-label="Previous image">&#10094;</button>
+          <div class="slides-container"></div>
+          <button class="slide-nav next" aria-label="Next image">&#10095;</button>
+        </div>
+      </div>`;
+    document.body.appendChild(modal);
+  }
+
+  const slidesContainer = modal.querySelector('.slides-container');
+  const prevBtn = modal.querySelector('.slide-nav.prev');
+  const nextBtn = modal.querySelector('.slide-nav.next');
+  const modalTitle = document.getElementById('sustainability-modal-title');
+  let currentSlides = [];
+  let currentSlideIndex = 0;
+
+  function renderSlide() {
+    if (!slidesContainer || !currentSlides.length) return;
+    slidesContainer.innerHTML = '';
+    const img = document.createElement('img');
+    img.src = currentSlides[currentSlideIndex];
+    img.alt = (modalTitle && modalTitle.textContent) ? modalTitle.textContent : 'Sustainability image';
+    img.loading = 'eager';
+    slidesContainer.appendChild(img);
+  }
+
+  function openModal(title, slides) {
+    if (title && modalTitle) modalTitle.textContent = title;
+    currentSlides = slides && slides.length ? slides : ['Logo.png'];
+    currentSlideIndex = 0;
+    renderSlide();
+    modal.classList.add('show');
+    modal.setAttribute('aria-hidden', 'false');
+  }
+
+  function closeModal() {
+    modal.classList.remove('show');
+    modal.setAttribute('aria-hidden', 'true');
+  }
+
+  prevBtn.addEventListener('click', () => {
+    if (!currentSlides.length) return;
+    currentSlideIndex = (currentSlideIndex - 1 + currentSlides.length) % currentSlides.length;
+    renderSlide();
+  });
+  nextBtn.addEventListener('click', () => {
+    if (!currentSlides.length) return;
+    currentSlideIndex = (currentSlideIndex + 1) % currentSlides.length;
+    renderSlide();
+  });
+  modal.querySelectorAll('[data-close="modal"]').forEach(b => b.addEventListener('click', closeModal));
+  document.addEventListener('keydown', (e) => {
+    if (modal.getAttribute('aria-hidden') === 'true') return;
+    if (e.key === 'Escape') closeModal();
+    if (e.key === 'ArrowLeft') prevBtn.click();
+    if (e.key === 'ArrowRight') nextBtn.click();
+  });
+
+  // Hook each tile to open modal; if no tiles, still open modal with discovered slides
+  const clickHandler = async () => {
+    const slides = await discoverSlides();
+    openModal('Sustainability & CSR', slides);
+  };
+
+  if (staticImgs.length) {
+    staticImgs.forEach(img => {
+      const parent = img.closest('.project-card') || img;
+      parent.style.cursor = 'pointer';
+      parent.addEventListener('click', clickHandler);
+      parent.setAttribute('role','button');
+      parent.tabIndex = 0;
+      parent.addEventListener('keypress', (e) => { if (e.key === 'Enter') clickHandler(); });
+    });
+  } else {
+    // If empty grid, add a placeholder card
+    const card = document.createElement('div');
+    card.className = 'project-card';
+    const img = document.createElement('img');
+    img.src = 'Logo.png';
+    img.alt = 'Sustainability';
+    card.appendChild(img);
+    grid.appendChild(card);
+    card.addEventListener('click', clickHandler);
+  }
+}
+
 function initSocialDrawer() {
   const drawer = document.querySelector('.social-drawer');
   if (!drawer) return;
@@ -1343,6 +1501,7 @@ document.addEventListener('DOMContentLoaded', () => {
   if ($('#projects-grid')) initProjects();
   if ($('#services-grid')) initServices();
   if ($('#clients-grid')) initClients();
+  if (document.getElementById('sustainability-grid')) initSustainability();
   if (document.getElementById('newsroom-grid')) initNewsroom();
   initSocialDrawer();
   // Timeline now uses a framed fullscreen image; skip JS auto-fill
